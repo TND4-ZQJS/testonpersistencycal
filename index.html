@@ -247,21 +247,36 @@ Notes:
       let saveable = [];
       let unqualified = [];
 
-      for (let line of lines) {
-        const [policyNo, name, monthsPaidStr, anpStr, status, block, reportDate] = line.split(",").map(s => s.trim());
-        const monthsPaid = parseInt(monthsPaidStr);
-        const anp = parseFloat(anpStr.replace(/,/g, ''));
+      let reportDate = "";
+      let block = "";
 
-        if (isNaN(anp) || anp <= 0) continue;
-        totalANP += anp;
+      let totalANP = 0;
+let persistedANP = 0;
+let saveable = [];
+let unqualified = [];
 
-        if (monthsPaid >= threshold) {
-          persistedANP += anp;
-        } else {
-          saveable.push({ policyNo, name, monthsPaid, anp, status });
-          unqualified.push({ policyNo, name, monthsPaid, anp, status });
-        }
-      }
+// Capture block + report date
+let reportDate = "";
+let block = "";
+
+for (let line of lines) {
+  const [policyNo, name, monthsPaidStr, anpStr, status, blockStr, reportDateStr] = line.split(",").map(s => s.trim());
+  const monthsPaid = parseInt(monthsPaidStr);
+  const anp = parseFloat(anpStr.replace(/,/g, ''));
+
+  if (!reportDate && reportDateStr) reportDate = reportDateStr;
+  if (!block && blockStr) block = blockStr;
+
+  if (isNaN(anp) || anp <= 0) continue;
+  totalANP += anp;
+
+  if (monthsPaid >= threshold) {
+    persistedANP += anp;
+  } else {
+    saveable.push({ policyNo, name, monthsPaid, anp, status });
+    unqualified.push({ policyNo, name, monthsPaid, anp, status });
+  }
+}
 
             // --- Manulife rounding function ---
       function manulifeRound(value) {
