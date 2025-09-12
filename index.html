@@ -237,131 +237,119 @@ Notes:
       });
     }
 
-    function calculate() {
-      const raw = document.getElementById("dataInput").value.trim();
-      const lines = raw.split("\n");
-      const threshold = parseInt(document.getElementById("persistencyType").value);
-
-      let totalANP = 0;
-      let persistedANP = 0;
-      let saveable = [];
-      let unqualified = [];
-
-      let reportDate = "";
-      let block = "";
-
-      let totalANP = 0;
-let persistedANP = 0;
-let saveable = [];
-let unqualified = [];
-
-// Capture block + report date
-let reportDate = "";
-let block = "";
-
-for (let line of lines) {
-  const [policyNo, name, monthsPaidStr, anpStr, status, blockStr, reportDateStr] = line.split(",").map(s => s.trim());
-  const monthsPaid = parseInt(monthsPaidStr);
-  const anp = parseFloat(anpStr.replace(/,/g, ''));
-
-  if (!reportDate && reportDateStr) reportDate = reportDateStr;
-  if (!block && blockStr) block = blockStr;
-
-  if (isNaN(anp) || anp <= 0) continue;
-  totalANP += anp;
-
-  if (monthsPaid >= threshold) {
-    persistedANP += anp;
-  } else {
-    saveable.push({ policyNo, name, monthsPaid, anp, status });
-    unqualified.push({ policyNo, name, monthsPaid, anp, status });
+function calculate() {
+  const raw = document.getElementById("dataInput").value.trim();
+  if (!raw) {
+    alert("Please paste your cleaned data first.");
+    return;
   }
-}
 
-            // --- Manulife rounding function ---
-      function manulifeRound(value) {
-        let str = value.toFixed(4);   // 4 decimals
-        let num = parseFloat(str);
-        num = parseFloat(num.toFixed(3)); // trim to 3 decimals
-        num = parseFloat(num.toFixed(2)); // trim to 2 decimals
-        num = parseFloat(num.toFixed(1)); // trim to 1 decimal
-        return num.toFixed(1);
-      }
+  const lines = raw.split("\n");
+  const threshold = parseInt(document.getElementById("persistencyType").value);
 
-      // --- Persistency calculations ---
-      const persistencyRaw = totalANP === 0 ? 0 : (persistedANP / totalANP) * 100;
-      const roundedPersistency = manulifeRound(persistencyRaw);
-      const targetANP = totalANP * 0.85;
-      const shortfall = targetANP - persistedANP;
+  let totalANP = 0;
+  let persistedANP = 0;
+  let saveable = [];
+  let unqualified = [];
 
-      const statusLabels = {
-        "IP": "IP (inforce)",
-        "LC": "LC (lapsed)",
-        "LA": "LA (lapsed)",
-        "TC": "TC (surrendered)"
-      };
+  // --- Capture reportDate & persistencyBlock ---
+  let reportDate = "";
+  let block = "";
 
-      let suggestion = "";
+  const statusLabels = {
+    "IP": "IP (inforce)",
+    "LC": "LC (lapsed)",
+    "LA": "LA (lapsed)",
+    "TC": "TC (surrendered)"
+  };
 
-      if (shortfall > 0) {
-        const statusPriority = { "IP": 1, "LA": 2, "LC": 2 };
+  for (let line of lines) {
+    const parts = line.split(",").map(s => s.trim());
+    if (parts.length < 7) continue; // skip invalid lines
 
-        saveable.sort((a, b) => {
-          const prioA = statusPriority[a.status] || 99;
-          const prioB = statusPriority[b.status] || 99;
+    const [policyNo, name, monthsPaidStr, anpStr, status, blockStr, reportDateStr] = parts;
 
-          if (prioA !== prioB) return prioA - prioB;
-          if (b.monthsPaid !== a.monthsPaid) return b.monthsPaid - a.monthsPaid;
-          return b.anp - a.anp;
-        });
+    const monthsPaid = parseInt(monthsPaidStr);
+    const anp = parseFloat(anpStr.replace(/,/g, ''));
 
-        let recovering = [];
-        let added = 0;
+    if (!reportDate && reportDateStr) reportDate = reportDateStr;
+    if (!block && blockStr) block = blockStr;
 
-        for (let p of saveable) {
-          if (added >= shortfall) break;
-          added += p.anp;
-          recovering.push(p);
-        }
+    if (isNaN(anp) || anp <= 0) continue;
 
-        suggestion = `<div class="suggestion-box"><p>❌ Persistency is below 85%. To reach it, you need an additional <b>RM ${shortfall.toLocaleString(undefined, { minimumFractionDigits: 2 })}</b>. 💡Suggested policies to recover:</p><ul>`;
-        for (let p of recovering) {
-          suggestion += `<li><b>${p.policyNo}</b> – ${p.name} – RM ${p.anp.toLocaleString(undefined, { minimumFractionDigits: 2 })} – ${p.monthsPaid} months paid – Status: ${statusLabels[p.status] || p.status}</li>`;
-        }
-        suggestion += "</ul></div>";
-      }
+    totalANP += anp;
 
-      let unqualifiedList = "";
-      if (unqualified.length > 0) {
-        unqualifiedList = "<h4>📋 Unqualified Policies (for reference):</h4><ul>";
-        for (let p of unqualified) {
-          unqualifiedList += `<li><b>${p.policyNo}</b> – ${p.name} – RM ${p.anp.toLocaleString(undefined, { minimumFractionDigits: 2 })} – ${p.monthsPaid} months paid – Status: ${statusLabels[p.status] || p.status}</li>`;
-        }
-        unqualifiedList += "</ul>";
-      }
+    if (monthsPaid >= threshold) {
+      persistedANP += anp;
+    } else {
+      saveable.push({ policyNo, name, monthsPaid, anp, status });
+      unqualified.push({ policyNo, name, monthsPaid, anp, status });
+    }
+  }
 
-      document.getElementById("result").innerHTML = `
-        <p><b>Total Persistency ANP:</b> RM ${totalANP.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
-        <p><b>Persisted ANP (≥ ${threshold} months):</b> RM ${persistedANP.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
-        <p><b>Persistency (Manulife Rule):</b> ${roundedPersistency}%</p>
-        <p id="debugLine" style="display:none; color:#666; font-size:14px; margin-top:-10px;">
-          🔍 Raw Persistency (before rounding): ${persistencyRaw.toFixed(4)}%
-        </p>
-        ${suggestion || "<p>✅ Persistency is 85% or above.</p>"}
-        ${unqualifiedList}
-      `;
+  // --- Manulife rounding ---
+  function manulifeRound(value) {
+    let num = parseFloat(value.toFixed(4));
+    num = parseFloat(num.toFixed(3));
+    num = parseFloat(num.toFixed(2));
+    num = parseFloat(num.toFixed(1));
+    return num.toFixed(1);
+  }
 
-        // --- Fill PDF Report ---
+  const persistencyRaw = totalANP === 0 ? 0 : (persistedANP / totalANP) * 100;
+  const roundedPersistency = manulifeRound(persistencyRaw);
+  const targetANP = totalANP * 0.85;
+  const shortfall = targetANP - persistedANP;
+
+  // --- Prepare suggestion ---
+  let suggestionHTML = "";
+  if (shortfall > 0) {
+    const statusPriority = { "IP": 1, "LA": 2, "LC": 2 };
+    saveable.sort((a, b) => {
+      const prioA = statusPriority[a.status] || 99;
+      const prioB = statusPriority[b.status] || 99;
+      if (prioA !== prioB) return prioA - prioB;
+      if (b.monthsPaid !== a.monthsPaid) return b.monthsPaid - a.monthsPaid;
+      return b.anp - a.anp;
+    });
+
+    suggestionHTML = "<h3>Suggested Saveable Policies</h3><ul>";
+    let added = 0;
+    for (let p of saveable) {
+      if (added >= shortfall) break;
+      added += p.anp;
+      suggestionHTML += `<li><b>${p.policyNo}</b> – ${p.name} – RM ${p.anp.toLocaleString(undefined,{minimumFractionDigits:2})} – ${p.monthsPaid} months – ${statusLabels[p.status] || p.status}</li>`;
+    }
+    suggestionHTML += "</ul>";
+  }
+
+  // --- Update web result section ---
+  let unqualifiedList = "";
+  if (unqualified.length > 0) {
+    unqualifiedList = "<h4>📋 Unqualified Policies (for reference):</h4><ul>";
+    for (let p of unqualified) {
+      unqualifiedList += `<li><b>${p.policyNo}</b> – ${p.name} – RM ${p.anp.toLocaleString(undefined,{minimumFractionDigits:2})} – ${p.monthsPaid} months – ${statusLabels[p.status] || p.status}</li>`;
+    }
+    unqualifiedList += "</ul>";
+  }
+
+  document.getElementById("result").innerHTML = `
+    <p><b>Total Persistency ANP:</b> RM ${totalANP.toLocaleString(undefined,{minimumFractionDigits:2})}</p>
+    <p><b>Persisted ANP (≥ ${threshold} months):</b> RM ${persistedANP.toLocaleString(undefined,{minimumFractionDigits:2})}</p>
+    <p><b>Persistency (Manulife Rule):</b> ${roundedPersistency}%</p>
+    ${shortfall > 0 ? `<p>❌ Persistency below 85%. Shortfall: RM ${shortfall.toLocaleString(undefined,{minimumFractionDigits:2})}</p>` : "<p>✅ Persistency meets 85%</p>"}
+    ${suggestionHTML}
+    ${unqualifiedList}
+  `;
+
+  // --- Fill PDF Template ---
   document.getElementById("pdfTotalANP").textContent = totalANP.toLocaleString(undefined,{minimumFractionDigits:2});
   document.getElementById("pdfPersistedANP").textContent = persistedANP.toLocaleString(undefined,{minimumFractionDigits:2});
   document.getElementById("pdfPersistency").textContent = roundedPersistency + "%";
   document.getElementById("pdfReportDate").textContent = reportDate || "-";
   document.getElementById("pdfPersistencyBlock").textContent = block || "-";
-
-  // Status
   document.getElementById("pdfStatus").textContent = (persistencyRaw >= 85 ? "✅ Met" : "❌ Not Met");
 
-  // Shortfall
   if (shortfall > 0) {
     document.getElementById("pdfShortfallSection").style.display = "block";
     document.getElementById("pdfShortfall").textContent = shortfall.toLocaleString(undefined,{minimumFractionDigits:2});
@@ -369,18 +357,9 @@ for (let line of lines) {
     document.getElementById("pdfShortfallSection").style.display = "none";
   }
 
-  // Suggested policies
-  let suggestionHTML = "";
-  if (shortfall > 0) {
-    suggestionHTML = "<h3>Suggested Saveable Policies</h3><ul>";
-    for (let p of saveable) {
-      suggestionHTML += `<li><b>${p.policyNo}</b> – ${p.name} – RM ${p.anp.toLocaleString(undefined,{minimumFractionDigits:2})} – ${p.monthsPaid} months – ${statusLabels[p.status] || p.status}</li>`;
-    }
-    suggestionHTML += "</ul>";
-  }
   document.getElementById("pdfSuggestions").innerHTML = suggestionHTML;
 
-  // Policy listing
+  // --- Full policy table ---
   let rows = "";
   for (let p of unqualified) {
     rows += `<tr>
@@ -392,6 +371,7 @@ for (let line of lines) {
     </tr>`;
   }
   document.getElementById("pdfPolicyRows").innerHTML = rows;
+}
       
     }
     function downloadPDF() {
