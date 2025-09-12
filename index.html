@@ -252,7 +252,6 @@ function calculate() {
   let saveable = [];
   let unqualified = [];
 
-  // --- Capture reportDate & persistencyBlock ---
   let reportDate = "";
   let block = "";
 
@@ -265,12 +264,12 @@ function calculate() {
 
   for (let line of lines) {
     const parts = line.split(",").map(s => s.trim());
-    if (parts.length < 7) continue; // skip invalid lines
+    if (parts.length < 7) continue;
 
     const [policyNo, name, monthsPaidStr, anpStr, status, blockStr, reportDateStr] = parts;
 
     const monthsPaid = parseInt(monthsPaidStr);
-    const anp = parseFloat(anpStr.replace(/,/g, ''));
+    const anp = parseFloat(anpStr.replace(/,/g,''));
 
     if (!reportDate && reportDateStr) reportDate = reportDateStr;
     if (!block && blockStr) block = blockStr;
@@ -278,17 +277,16 @@ function calculate() {
     if (isNaN(anp) || anp <= 0) continue;
 
     totalANP += anp;
-
     if (monthsPaid >= threshold) {
       persistedANP += anp;
     } else {
       saveable.push({ policyNo, name, monthsPaid, anp, status });
-      unqualified.push({ policyNo, name, monthsPaid, anp, status });
     }
+
+    unqualified.push({ policyNo, name, monthsPaid, anp, status });
   }
 
-  // --- Manulife rounding ---
-  function manulifeRound(value) {
+  const manulifeRound = (value) => {
     let num = parseFloat(value.toFixed(4));
     num = parseFloat(num.toFixed(3));
     num = parseFloat(num.toFixed(2));
@@ -299,69 +297,66 @@ function calculate() {
   const persistencyRaw = totalANP === 0 ? 0 : (persistedANP / totalANP) * 100;
   const roundedPersistency = manulifeRound(persistencyRaw);
   const targetANP = totalANP * 0.85;
-  const shortfall = targetANP - persistedANP;
+  const shortfall = Math.max(targetANP - persistedANP, 0);
 
-  // --- Prepare suggestion ---
+  // Prepare suggestion
   let suggestionHTML = "";
-  if (shortfall > 0) {
-    const statusPriority = { "IP": 1, "LA": 2, "LC": 2 };
-    saveable.sort((a, b) => {
-      const prioA = statusPriority[a.status] || 99;
-      const prioB = statusPriority[b.status] || 99;
-      if (prioA !== prioB) return prioA - prioB;
-      if (b.monthsPaid !== a.monthsPaid) return b.monthsPaid - a.monthsPaid;
-      return b.anp - a.anp;
+  if (shortfall > 0 && saveable.length > 0) {
+    saveable.sort((a,b) => {
+      const prio = { "IP":1,"LA":2,"LC":2 };
+      const pa = prio[a.status] || 99;
+      const pb = prio[b.status] || 99;
+      if(pa!==pb) return pa-pb;
+      if(b.monthsPaid!==a.monthsPaid) return b.monthsPaid-a.monthsPaid;
+      return b.anp-a.anp;
     });
 
     suggestionHTML = "<h3>Suggested Saveable Policies</h3><ul>";
-    let added = 0;
-    for (let p of saveable) {
-      if (added >= shortfall) break;
+    let added=0;
+    for(let p of saveable){
+      if(added >= shortfall) break;
       added += p.anp;
       suggestionHTML += `<li><b>${p.policyNo}</b> – ${p.name} – RM ${p.anp.toLocaleString(undefined,{minimumFractionDigits:2})} – ${p.monthsPaid} months – ${statusLabels[p.status] || p.status}</li>`;
     }
     suggestionHTML += "</ul>";
   }
 
-  // --- Update web result section ---
-  let unqualifiedList = "";
-  if (unqualified.length > 0) {
-    unqualifiedList = "<h4>📋 Unqualified Policies (for reference):</h4><ul>";
-    for (let p of unqualified) {
-      unqualifiedList += `<li><b>${p.policyNo}</b> – ${p.name} – RM ${p.anp.toLocaleString(undefined,{minimumFractionDigits:2})} – ${p.monthsPaid} months – ${statusLabels[p.status] || p.status}</li>`;
-    }
-    unqualifiedList += "</ul>";
-  }
+  // Update result
+  let unqualifiedList = "<h4>📋 Unqualified Policies:</h4><ul>";
+  unqualified.forEach(p=>{
+    unqualifiedList += `<li><b>${p.policyNo}</b> – ${p.name} – RM ${p.anp.toLocaleString(undefined,{minimumFractionDigits:2})} – ${p.monthsPaid} months – ${statusLabels[p.status] || p.status}</li>`;
+  });
+  unqualifiedList += "</ul>";
 
   document.getElementById("result").innerHTML = `
-    <p><b>Total Persistency ANP:</b> RM ${totalANP.toLocaleString(undefined,{minimumFractionDigits:2})}</p>
+    <p><b>Total ANP:</b> RM ${totalANP.toLocaleString(undefined,{minimumFractionDigits:2})}</p>
     <p><b>Persisted ANP (≥ ${threshold} months):</b> RM ${persistedANP.toLocaleString(undefined,{minimumFractionDigits:2})}</p>
     <p><b>Persistency (Manulife Rule):</b> ${roundedPersistency}%</p>
-    ${shortfall > 0 ? `<p>❌ Persistency below 85%. Shortfall: RM ${shortfall.toLocaleString(undefined,{minimumFractionDigits:2})}</p>` : "<p>✅ Persistency meets 85%</p>"}
+    ${shortfall>0 ? `<p>❌ Persistency below 85%. Shortfall: RM ${shortfall.toLocaleString(undefined,{minimumFractionDigits:2})}</p>` : "<p>✅ Persistency meets 85%</p>"}
     ${suggestionHTML}
     ${unqualifiedList}
   `;
 
-  // --- Fill PDF Template ---
+  // Fill PDF
   document.getElementById("pdfTotalANP").textContent = totalANP.toLocaleString(undefined,{minimumFractionDigits:2});
   document.getElementById("pdfPersistedANP").textContent = persistedANP.toLocaleString(undefined,{minimumFractionDigits:2});
-  document.getElementById("pdfPersistency").textContent = roundedPersistency + "%";
+  document.getElementById("pdfPersistency").textContent = roundedPersistency+"%";
   document.getElementById("pdfReportDate").textContent = reportDate || "-";
   document.getElementById("pdfPersistencyBlock").textContent = block || "-";
-  document.getElementById("pdfStatus").textContent = (persistencyRaw >= 85 ? "✅ Met" : "❌ Not Met");
+  document.getElementById("pdfStatus").textContent = (persistencyRaw>=85?"✅ Met":"❌ Not Met");
 
-  if (shortfall > 0) {
-    document.getElementById("pdfShortfallSection").style.display = "block";
+  if(shortfall>0){
+    document.getElementById("pdfShortfallSection").style.display="block";
     document.getElementById("pdfShortfall").textContent = shortfall.toLocaleString(undefined,{minimumFractionDigits:2});
   } else {
-    document.getElementById("pdfShortfallSection").style.display = "none";
+    document.getElementById("pdfShortfallSection").style.display="none";
   }
 
   document.getElementById("pdfSuggestions").innerHTML = suggestionHTML;
 
-  // --- Full policy table ---
-  let rows = "";
-  for (let p of unqualified) {
+  // Full table
+  let rows="";
+  unqualified.forEach(p=>{
     rows += `<tr>
       <td style="padding:6px; border:1px solid #ddd;">${p.policyNo}</td>
       <td style="padding:6px; border:1px solid #ddd;">${p.name}</td>
@@ -369,11 +364,11 @@ function calculate() {
       <td style="padding:6px; border:1px solid #ddd;">${p.monthsPaid}</td>
       <td style="padding:6px; border:1px solid #ddd;">${statusLabels[p.status] || p.status}</td>
     </tr>`;
-  }
+  });
   document.getElementById("pdfPolicyRows").innerHTML = rows;
 }
       
-    }
+  
     function downloadPDF() {
       const content = document.getElementById("pdfReport");
       const result = document.getElementById("result");
