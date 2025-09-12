@@ -1,537 +1,439 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Persistency Calculator — Apple-style Report</title>
-
-<!-- jsPDF + AutoTable -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-
-<style>
-  /* Apple-style minimal UI */
-  :root{
-    --bg:#f5f5f7;
-    --card:#ffffff;
-    --muted:#6b6b6f;
-    --line:#e9e9ee;
-    --accent:#0071e3;
-    --title:#111;
-    --table-head:#f2f5f8;
-    --radius:12px;
-    --maxw:900px;
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" charset="UTF-8" />
+  <title>Persistency Calculator</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+      background-color: #f5f5f7;
+      color: #1d1d1f;
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+    }
+    .container {
+      max-width: 600px;
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      margin: auto;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    textarea, select {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+    button {
+      background: #0071e3;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 10px;
+      width: 100%;
+    }
+    button:hover {
+      background: #005bb5;
+    }
+    #result {
+      margin-top: 20px;
+      text-align: left;
+    }
+    .guide {
+      text-align: left;
+      margin-top: 20px;
+      border-radius: 8px;
+      background-color: #e5f1ff;
+      padding: 15px;
+      color: #1d1d1f;
+      border: 1px solid #0071e3;
+    }
+    summary {
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      padding: 10px;
+      background-color: #f0f4ff;
+      border-radius: 8px;
+    }
+    .guide-step {
+      margin: 10px 0;
+      line-height: 1.6;
+    }
+    details[open] summary {
+      background-color: #dceeff;
+      color: #0071e3;
+    }
+    .copy-button {
+      background-color: #0071e3;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-size: 14px;
+      margin-top: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .copy-button:hover {
+      background-color: #005bb5;
+    }
+   @media (max-width: 768px) {
+  .container {
+    padding: 20px;
+    margin: 10px;
   }
+  h2 {
+    font-size: 20px;
+  }
+  textarea {
+    font-size: 14px;
+  }
+}
 
-  html,body{height:100%;}
-  body{
-    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
-    background:var(--bg);
-    margin:0;
-    padding:28px;
-    color:var(--title);
-    -webkit-font-smoothing:antialiased;
+@media (max-width: 480px) {
+  body {
+    padding: 10px;
   }
-
-  .wrap{
-    max-width:var(--maxw);
-    margin:0 auto;
+  .container {
+    padding: 15px;
   }
-
-  .card{
-    background:var(--card);
-    border-radius:var(--radius);
-    padding:22px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+  button {
+    font-size: 14px;
+    padding: 10px;
   }
-
-  h1{
-    margin:0 0 8px 0;
-    font-size:18px;
-    letter-spacing:-0.2px;
-    text-align:center;
-    font-weight:700;
-  }
-
-  .meta {
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-    gap:12px;
-    margin-bottom:18px;
-  }
-  .meta-left{ color:var(--muted); font-size:13px; line-height:1.45; text-align:left; }
-  .meta-right{ color:var(--muted); font-size:13px; text-align:right; min-width:160px; }
-
-  textarea, select {
-    width:100%;
-    box-sizing:border-box;
-    border-radius:10px;
-    border:1px solid var(--line);
-    padding:12px;
-    font-size:14px;
-    resize:vertical;
-    background:white;
-    font-family:inherit;
-    color:var(--title);
-  }
-
-  .row{display:flex; gap:12px; margin-top:12px;}
-  .col{flex:1;}
-
-  button{
-    background:var(--accent);
-    color:white;
-    border:none;
-    padding:10px 14px;
-    border-radius:10px;
-    font-weight:600;
-    cursor:pointer;
-    font-size:14px;
-  }
-  button.secondary{
-    background:transparent;
-    color:var(--accent);
-    border:1px solid var(--accent);
-    font-weight:600;
-  }
-
-  #result{
-    margin-top:16px;
-    text-align:left;
-  }
-
-  .summary-grid{
-    display:flex;
-    gap:12px;
-    margin-top:12px;
-    flex-wrap:wrap;
-  }
-  .card-small{
-    background:#fff;
-    border-radius:10px;
-    padding:12px;
-    min-width:150px;
-    box-shadow:none;
-    border:1px solid var(--line);
-  }
-  .card-small .label{ color:var(--muted); font-size:12px; }
-  .card-small .value{ font-weight:700; font-size:16px; margin-top:6px; }
-
-  .suggestion-box{
-    margin-top:14px;
-    padding:12px;
-    border-radius:10px;
-    background:#fff9f3;
-    border:1px solid #ffe2c7;
-    color:#4e342e;
-  }
-
-  pre#rawOutput{
-    display:none;
-    background:#fbfbfd;
-    border:1px solid var(--line);
-    padding:10px;
-    border-radius:8px;
-    margin-top:12px;
-    max-height:260px;
-    overflow:auto;
-    white-space:pre-wrap;
-    text-align:left;
-  }
-
-  footer.small{
-    margin-top:18px;
-    color:var(--muted);
-    font-size:12px;
-    text-align:center;
-  }
-
-  @media (max-width:600px){
-    .meta{flex-direction:column; align-items:stretch;}
-    .meta-right{ text-align:left; }
-  }
-</style>
+}
+    .suggestion-box {
+      background-color: #fff4e5;
+      border: 1px solid #ffa726;
+      padding: 16px;
+      border-radius: 10px;
+      margin-top: 30px;
+      text-align: left;
+      color: #4e342e;
+    }
+    #pdfTitle {
+      display: none;
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <div class="meta">
-        <div class="meta-left">
-          <div id="reportDate">Report Date: 11/07/2025</div>
-          <div id="persistBlock">Persistency Block: 01-JUL-2023 to 30-JUN-2024</div>
-        </div>
-        <div style="flex:1"></div>
-        <div class="meta-right">
-          <div style="font-weight:700; font-size:14px;" id="agentName">Agent: JOHN DOE</div>
-        </div>
+  <div class="container" id="pdfContent">
+    <h2>Persistency Calculator</h2>
+
+    <label><b>Choose Persistency Type:</b></label><br>
+    <select id="persistencyType">
+      <option value="13">13-Month Persistency</option>
+      <option value="12">12-Month Persistency</option>
+    </select>
+
+    <details>
+      <summary>📘 Show Guide</summary>
+      <div class="guide">
+        <div class="guide-step"><strong>Step 1:</strong> Open the Manulife report (PDF or scanned text).</div>
+        <div class="guide-step"><strong>Step 2:</strong> Copy the whole table content (including headers).</div>
+        <div class="guide-step"><strong>Step 3:</strong> In ChatGPT, paste the content and type:</div>
+        <pre style="margin-top: 10px; white-space: pre-wrap;">
+<code id="hiddenPrompt">
+Please extract the following details from the copied Manulife report:
+
+Format:
+PolicyNo, Name, MonthsPaid, PsistANP, Status, PersistencyBlock, ReportDate
+
+Example:
+00999998, MOU TAK DENG, 10, 3,600.00, LC, 01-JUN-2023 to 31-MAY-2024, 11/07/2025
+
+Notes:
+- Only include actual policies (skip totals or headers)
+- PersistencyBlock = date range near top (e.g. "01-JUN-2023 to 31-MAY-2024")
+- ReportDate = top-left corner date (e.g. "11/07/2025")
+- Do not add thousand separators or commas to numbers. Keep numbers exactly as in the report (e.g. 3600.00, not 3,600.00)
+</code>
+</pre>
+        <button class="copy-button" onclick="copyPrompt()">📋 Copy Prompt</button>
+        <div class="guide-step"><strong>Step 4:</strong> Copy the cleaned result and paste it into the calculator below.</div>
       </div>
+    </details>
 
-      <h1>Persistency Calculator Report</h1>
+    <textarea id="dataInput" rows="10" placeholder="Paste your cleaned result from ChatGPT here..."></textarea>
+    <button onclick="calculate()">Calculate</button>
+    <div id="pdfTitle">Persistency Calculator Report</div>
+    <div id="result"></div>
 
-      <details style="margin-top:12px;">
-        <summary style="cursor:pointer; color:var(--muted);">📘 Show Guide</summary>
-        <div style="margin-top:10px; color:var(--muted); font-size:13px;">
-          Paste cleaned CSV-style lines into the box below in this format:
-          <div style="margin-top:6px; background:#fafafa; border:1px solid var(--line); padding:8px; border-radius:6px; font-family:monospace; font-size:13px;">
-            PolicyNo, Name, MonthsPaid, PsistANP, Status, PersistencyBlock, ReportDate
-          </div>
-        </div>
-      </details>
-
-      <div style="margin-top:12px;">
-        <textarea id="dataInput" rows="8" placeholder="Paste policy data here (CSV lines)..."></textarea>
-      </div>
-
-      <div class="row" style="margin-top:12px;">
-        <div class="col">
-          <select id="persistencyType">
-            <option value="13">13-Month Persistency</option>
-            <option value="12">12-Month Persistency</option>
-          </select>
-        </div>
-        <div style="width:150px;">
-          <button onclick="calculate()">Calculate</button>
-        </div>
-      </div>
-
-      <div style="display:flex; gap:10px; margin-top:10px;">
-        <button class="secondary" id="toggleDebug" onclick="toggleDebug()">Show Raw Persistency</button>
-        <button onclick="generateStructuredPDF()">📄 Generate Formal Report (PDF)</button>
-      </div>
-
-      <div id="result"></div>
-      <pre id="rawOutput"></pre>
-
-      <footer class="small">Generated by Persistency Calculator Tool — Apple-style report</footer>
+    <!-- Hidden PDF Report Template -->
+<div id="pdfReport" style="display:none; text-align:left; padding:40px; font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif; color:#111;">
+  <!-- Header -->
+  <div style="border-bottom:1px solid #ddd; padding-bottom:10px; margin-bottom:20px;">
+    <div style="float:left;">
+      <p><b>Report Date:</b> <span id="pdfReportDate"></span></p>
+      <p><b>Persistency Block:</b> <span id="pdfPersistencyBlock"></span></p>
     </div>
+    <div style="text-align:center; font-size:22px; font-weight:bold;">Persistency Calculator Report</div>
+    <div style="clear:both;"></div>
   </div>
 
-<script>
-/* ========== Parsing and Calculation (robust) ========== */
-let policies = [];
-let lastCalc = {
-  totalANP:0,
-  persistedANP:0,
-  roundedPersistency:0,
-  shortfall:0,
-  recovering: [],
-  threshold:13
-};
+  <!-- Executive Summary -->
+  <h3>Executive Summary</h3>
+  <p><b>Total ANP:</b> RM <span id="pdfTotalANP"></span></p>
+  <p><b>Persisted ANP:</b> RM <span id="pdfPersistedANP"></span></p>
+  <p><b>Persistency %:</b> <span id="pdfPersistency"></span></p>
+  <p><b>Target Persistency:</b> 85%</p>
+  <p><b>Status:</b> <span id="pdfStatus"></span></p>
 
-function parseInputToPolicies() {
-  policies = [];
-  const raw = document.getElementById("dataInput").value.trim();
-  if (!raw) return policies;
-  const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(l => l.length);
-  for (let line of lines) {
-    // split but allow names with commas
-    const parts = line.split(",").map(s => s.trim());
-    if (parts.length < 7) continue;
-    const policyNo = parts[0];
-    if (!/^\d{5,12}$/.test(policyNo)) continue;
-    const reportDate = parts[parts.length - 1];
-    const persistencyBlock = parts[parts.length - 2];
-    const status = parts[parts.length - 3];
-    const anpStr = parts[parts.length - 4];
-    const monthsPaidStr = parts[parts.length - 5];
-    const name = parts.slice(1, parts.length - 5).join(", ");
+  <!-- Shortfall Section -->
+  <div id="pdfShortfallSection" style="margin-top:20px; display:none;">
+    <h3>Shortfall</h3>
+    <p><b>Required Additional ANP:</b> RM <span id="pdfShortfall"></span></p>
+  </div>
 
-    const monthsPaid = parseInt(monthsPaidStr, 10);
-    const anp = parseFloat((anpStr || "").replace(/,/g, ''));
+  <!-- Saveable Policies -->
+  <div id="pdfSuggestions" style="margin-top:30px;"></div>
 
-    if (isNaN(anp) || anp <= 0) continue;
+  <!-- Full Policy Listing -->
+  <div id="pdfPolicyTable" style="margin-top:30px;">
+    <h3>Full Policy Listing</h3>
+    <table style="width:100%; border-collapse:collapse; font-size:12px;">
+      <thead>
+        <tr style="background:#f5f5f7; text-align:left;">
+          <th style="padding:6px; border:1px solid #ddd;">Policy No</th>
+          <th style="padding:6px; border:1px solid #ddd;">Name</th>
+          <th style="padding:6px; border:1px solid #ddd;">ANP</th>
+          <th style="padding:6px; border:1px solid #ddd;">Months Paid</th>
+          <th style="padding:6px; border:1px solid #ddd;">Status</th>
+        </tr>
+      </thead>
+      <tbody id="pdfPolicyRows"></tbody>
+    </table>
+  </div>
+</div>
+    
+    <button onclick="downloadPDF()">📄 Download Report as PDF</button>
+  </div>
 
-    policies.push({
-      policyNo, name, monthsPaid, monthsPaidStr, anp, anpStr, status, persistencyBlock, reportDate
+  <script>
+    function copyPrompt() {
+      const code = document.getElementById("hiddenPrompt").innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.querySelector(".copy-button");
+        btn.textContent = "✅ Copied!";
+        setTimeout(() => {
+          btn.textContent = "📋 Copy Prompt";
+        }, 2000);
+      }).catch(() => {
+        alert("❌ Copy failed. Please try again.");
+      });
+    }
+
+    function calculate() {
+      const raw = document.getElementById("dataInput").value.trim();
+      const lines = raw.split("\n");
+      const threshold = parseInt(document.getElementById("persistencyType").value);
+
+      let totalANP = 0;
+      let persistedANP = 0;
+      let saveable = [];
+      let unqualified = [];
+
+      for (let line of lines) {
+        const [policyNo, name, monthsPaidStr, anpStr, status, block, reportDate] = line.split(",").map(s => s.trim());
+        const monthsPaid = parseInt(monthsPaidStr);
+        const anp = parseFloat(anpStr.replace(/,/g, ''));
+
+        if (isNaN(anp) || anp <= 0) continue;
+        totalANP += anp;
+
+        if (monthsPaid >= threshold) {
+          persistedANP += anp;
+        } else {
+          saveable.push({ policyNo, name, monthsPaid, anp, status });
+          unqualified.push({ policyNo, name, monthsPaid, anp, status });
+        }
+      }
+
+            // --- Manulife rounding function ---
+      function manulifeRound(value) {
+        let str = value.toFixed(4);   // 4 decimals
+        let num = parseFloat(str);
+        num = parseFloat(num.toFixed(3)); // trim to 3 decimals
+        num = parseFloat(num.toFixed(2)); // trim to 2 decimals
+        num = parseFloat(num.toFixed(1)); // trim to 1 decimal
+        return num.toFixed(1);
+      }
+
+      // --- Persistency calculations ---
+      const persistencyRaw = totalANP === 0 ? 0 : (persistedANP / totalANP) * 100;
+      const roundedPersistency = manulifeRound(persistencyRaw);
+      const targetANP = totalANP * 0.85;
+      const shortfall = targetANP - persistedANP;
+
+      const statusLabels = {
+        "IP": "IP (inforce)",
+        "LC": "LC (lapsed)",
+        "LA": "LA (lapsed)",
+        "TC": "TC (surrendered)"
+      };
+
+      let suggestion = "";
+
+      if (shortfall > 0) {
+        const statusPriority = { "IP": 1, "LA": 2, "LC": 2 };
+
+        saveable.sort((a, b) => {
+          const prioA = statusPriority[a.status] || 99;
+          const prioB = statusPriority[b.status] || 99;
+
+          if (prioA !== prioB) return prioA - prioB;
+          if (b.monthsPaid !== a.monthsPaid) return b.monthsPaid - a.monthsPaid;
+          return b.anp - a.anp;
+        });
+
+        let recovering = [];
+        let added = 0;
+
+        for (let p of saveable) {
+          if (added >= shortfall) break;
+          added += p.anp;
+          recovering.push(p);
+        }
+
+        suggestion = `<div class="suggestion-box"><p>❌ Persistency is below 85%. To reach it, you need an additional <b>RM ${shortfall.toLocaleString(undefined, { minimumFractionDigits: 2 })}</b>. 💡Suggested policies to recover:</p><ul>`;
+        for (let p of recovering) {
+          suggestion += `<li><b>${p.policyNo}</b> – ${p.name} – RM ${p.anp.toLocaleString(undefined, { minimumFractionDigits: 2 })} – ${p.monthsPaid} months paid – Status: ${statusLabels[p.status] || p.status}</li>`;
+        }
+        suggestion += "</ul></div>";
+      }
+
+      let unqualifiedList = "";
+      if (unqualified.length > 0) {
+        unqualifiedList = "<h4>📋 Unqualified Policies (for reference):</h4><ul>";
+        for (let p of unqualified) {
+          unqualifiedList += `<li><b>${p.policyNo}</b> – ${p.name} – RM ${p.anp.toLocaleString(undefined, { minimumFractionDigits: 2 })} – ${p.monthsPaid} months paid – Status: ${statusLabels[p.status] || p.status}</li>`;
+        }
+        unqualifiedList += "</ul>";
+      }
+
+      document.getElementById("result").innerHTML = `
+        <p><b>Total Persistency ANP:</b> RM ${totalANP.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+        <p><b>Persisted ANP (≥ ${threshold} months):</b> RM ${persistedANP.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+        <p><b>Persistency (Manulife Rule):</b> ${roundedPersistency}%</p>
+        <p id="debugLine" style="display:none; color:#666; font-size:14px; margin-top:-10px;">
+          🔍 Raw Persistency (before rounding): ${persistencyRaw.toFixed(4)}%
+        </p>
+        ${suggestion || "<p>✅ Persistency is 85% or above.</p>"}
+        ${unqualifiedList}
+      `;
+
+        // --- Fill PDF Report ---
+  document.getElementById("pdfTotalANP").textContent = totalANP.toLocaleString(undefined,{minimumFractionDigits:2});
+  document.getElementById("pdfPersistedANP").textContent = persistedANP.toLocaleString(undefined,{minimumFractionDigits:2});
+  document.getElementById("pdfPersistency").textContent = roundedPersistency + "%";
+  document.getElementById("pdfReportDate").textContent = reportDate || "-";
+  document.getElementById("pdfPersistencyBlock").textContent = block || "-";
+
+  // Status
+  document.getElementById("pdfStatus").textContent = (persistencyRaw >= 85 ? "✅ Met" : "❌ Not Met");
+
+  // Shortfall
+  if (shortfall > 0) {
+    document.getElementById("pdfShortfallSection").style.display = "block";
+    document.getElementById("pdfShortfall").textContent = shortfall.toLocaleString(undefined,{minimumFractionDigits:2});
+  } else {
+    document.getElementById("pdfShortfallSection").style.display = "none";
+  }
+
+  // Suggested policies
+  let suggestionHTML = "";
+  if (shortfall > 0) {
+    suggestionHTML = "<h3>Suggested Saveable Policies</h3><ul>";
+    for (let p of saveable) {
+      suggestionHTML += `<li><b>${p.policyNo}</b> – ${p.name} – RM ${p.anp.toLocaleString(undefined,{minimumFractionDigits:2})} – ${p.monthsPaid} months – ${statusLabels[p.status] || p.status}</li>`;
+    }
+    suggestionHTML += "</ul>";
+  }
+  document.getElementById("pdfSuggestions").innerHTML = suggestionHTML;
+
+  // Policy listing
+  let rows = "";
+  for (let p of unqualified) {
+    rows += `<tr>
+      <td style="padding:6px; border:1px solid #ddd;">${p.policyNo}</td>
+      <td style="padding:6px; border:1px solid #ddd;">${p.name}</td>
+      <td style="padding:6px; border:1px solid #ddd;">RM ${p.anp.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+      <td style="padding:6px; border:1px solid #ddd;">${p.monthsPaid}</td>
+      <td style="padding:6px; border:1px solid #ddd;">${statusLabels[p.status] || p.status}</td>
+    </tr>`;
+  }
+  document.getElementById("pdfPolicyRows").innerHTML = rows;
+      
+    }
+    function downloadPDF() {
+      const content = document.getElementById("pdfReport");
+      const result = document.getElementById("result");
+
+      if (!result.innerText.trim()) {
+        alert("No result to download. Please run a calculation first.");
+        return;
+      }
+
+      const title = document.getElementById("pdfTitle");
+      title.style.display = "block";
+
+      const opt = {
+        margin: 0.5,
+        filename: 'persistency_report.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opt).from(content).save().then(() => {
+        title.style.display = "none";
+      });
+    }
+
+    // -------------------------
+// Auto-save / Restore Inputs
+// -------------------------
+window.addEventListener('DOMContentLoaded', function () {
+  const dataInputEl = document.getElementById('dataInput');
+  const persistencyTypeEl = document.getElementById('persistencyType');
+
+  // Restore saved values
+  const savedInput = localStorage.getItem('persistencyDataInput');
+  if (savedInput !== null && dataInputEl) {
+    dataInputEl.value = savedInput;
+  }
+
+  const savedType = localStorage.getItem('persistencyType');
+  if (savedType !== null && persistencyTypeEl) {
+    persistencyTypeEl.value = savedType;
+  }
+
+  // Save on change
+  if (dataInputEl) {
+    dataInputEl.addEventListener('input', function () {
+      localStorage.setItem('persistencyDataInput', this.value);
     });
   }
-  return policies;
-}
-
-function manulifeRound(value) {
-  let str = value.toFixed(4);
-  let num = parseFloat(str);
-  num = parseFloat(num.toFixed(3));
-  num = parseFloat(num.toFixed(2));
-  num = parseFloat(num.toFixed(1));
-  return parseFloat(num.toFixed(1));
-}
-
-function calculate() {
-  parseInputToPolicies();
-  const threshold = parseInt(document.getElementById("persistencyType").value || "13", 10);
-  lastCalc.threshold = threshold;
-
-  let totalANP = 0;
-  let persistedANP = 0;
-  let saveable = [];
-  let unqualified = [];
-
-  for (let p of policies) {
-    totalANP += p.anp;
-    if (p.monthsPaid >= threshold) {
-      persistedANP += p.anp;
-    } else {
-      saveable.push(p);
-    }
-  }
-
-  // Sort saveable according to your logic:
-  // 1) Inforce (IP) first, ordered by monthsPaid desc, then anp desc
-  // 2) Then lapsed (LC, LA, etc.), ordered similarly
-  const isLapsed = s => (s && s.toUpperCase().startsWith("L")) || s.toUpperCase()==="LA" || s.toUpperCase()==="LC" || s.toUpperCase()==="LR" || s.toUpperCase()==="TC";
-  const statusPriority = s => {
-    if (!s) return 99;
-    s = s.toUpperCase();
-    if (s === "IP") return 1;
-    // keep lapsed codes as second priority (LC/LA/others)
-    if (s.startsWith("L") || s === "LA" || s === "LC" || s === "LR") return 2;
-    if (s === "TC") return 3;
-    return 99;
-  };
-
-  saveable.sort((a,b) => {
-    const pa = statusPriority(a.status);
-    const pb = statusPriority(b.status);
-    if (pa !== pb) return pa - pb;
-    if (b.monthsPaid !== a.monthsPaid) return b.monthsPaid - a.monthsPaid;
-    return b.anp - a.anp;
-  });
-
-  // Build suggested recovering list until shortfall reached
-  const targetANP = totalANP * 0.85;
-  const shortfall = Math.max(0, targetANP - persistedANP);
-
-  let added = 0;
-  const recovering = [];
-  for (let s of saveable) {
-    if (added >= shortfall) break;
-    recovering.push(s);
-    added += s.anp;
-  }
-
-  // Prepare status labels
-  const statusLabels = { "IP":"IP (inforce)", "LC":"LC (lapsed)", "LA":"LA (lapsed)", "TC":"TC (surrendered)" };
-
-  const roundedPersistency = manulifeRound(totalANP === 0 ? 0 : (persistedANP / totalANP) * 100);
-
-  // store last calc for PDF generation
-  lastCalc = {
-    policies,
-    totalANP,
-    persistedANP,
-    roundedPersistency,
-    shortfall,
-    recovering,
-    threshold,
-    targetANP
-  };
-
-  // Render result to UI
-  const resultEl = document.getElementById("result");
-  const statusMet = roundedPersistency >= 85;
-  let html = `
-    <div class="summary-grid">
-      <div class="card-small"><div class="label">Total ANP</div><div class="value">RM ${totalANP.toFixed(2)}</div></div>
-      <div class="card-small"><div class="label">Persisted ANP</div><div class="value">RM ${persistedANP.toFixed(2)}</div></div>
-      <div class="card-small"><div class="label">Persistency %</div><div class="value">${roundedPersistency}%</div></div>
-      <div class="card-small"><div class="label">Target</div><div class="value">85%</div></div>
-      <div class="card-small"><div class="label">Status</div><div class="value">${statusMet ? "✅ Met" : "❌ Not Met"}</div></div>
-    </div>
-  `;
-
-  if (!statusMet) {
-    html += `<div class="suggestion-box"><strong>Shortfall:</strong> You need an additional <b>RM ${Math.max(0, (lastCalc.shortfall)).toFixed(2)}</b> to reach 85%.<br/><br/>
-    <strong>Suggested saveable policies (priority: inforce highest months paid → lapsed):</strong>
-    <ul style="margin-top:8px;">`;
-    for (let r of recovering) {
-      html += `<li><b>${r.policyNo}</b> — ${r.name} — ${r.monthsPaid} months — RM ${r.anp.toFixed(2)} — ${statusLabels[r.status]||r.status}</li>`;
-    }
-    html += `</ul></div>`;
-  } else {
-    html += `<div style="margin-top:12px; color:green;">✅ Persistency target met.</div>`;
-  }
-
-  // Full listing (small)
-  if (policies.length > 0) {
-    html += `<div style="margin-top:14px;"><h4 style="margin:6px 0;">Full Policy Listing</h4><div style="font-size:12px;">`;
-    html += `<table style="width:100%; border-collapse:collapse; font-size:12px;"><thead><tr style="background:${'#f7f8fa'}"><th style="padding:6px;border:1px solid ${'#eee'};text-align:left">Policy No</th><th style="padding:6px;border:1px solid ${'#eee'};text-align:left">Name</th><th style="padding:6px;border:1px solid ${'#eee'};text-align:left">Months</th><th style="padding:6px;border:1px solid ${'#eee'};text-align:right">ANP</th><th style="padding:6px;border:1px solid ${'#eee'};text-align:left">Status</th></tr></thead><tbody>`;
-    for (let p of policies) {
-      html += `<tr><td style="padding:6px;border:1px solid ${'#eee'}">${p.policyNo}</td><td style="padding:6px;border:1px solid ${'#eee'}">${p.name}</td><td style="padding:6px;border:1px solid ${'#eee'}">${p.monthsPaid}</td><td style="padding:6px;border:1px solid ${'#eee'};text-align:right">RM ${p.anp.toFixed(2)}</td><td style="padding:6px;border:1px solid ${'#eee'}">${p.status}</td></tr>`;
-    }
-    html += `</tbody></table></div></div>`;
-  }
-
-  resultEl.innerHTML = html;
-
-  // If raw pane visible, refresh it
-  const pre = document.getElementById("rawOutput");
-  const toggleBtn = document.getElementById("toggleDebug");
-  if (pre.style.display === "block") {
-    pre.textContent = policies.map(p => `${p.policyNo}, ${p.name}, ${p.monthsPaid}, ${p.anp.toFixed(2)}, ${p.status}, ${p.persistencyBlock}, ${p.reportDate}`).join("\n");
-    toggleBtn.textContent = "Hide Raw Persistency";
-  } else {
-    toggleBtn.textContent = "Show Raw Persistency";
-  }
-}
-
-/* Toggle raw */
-function toggleDebug(){
-  const pre = document.getElementById("rawOutput");
-  const btn = document.getElementById("toggleDebug");
-  if (pre.style.display === "block") { pre.style.display="none"; btn.textContent="Show Raw Persistency"; return; }
-  parseInputToPolicies();
-  if (policies.length===0) pre.textContent = "No parsed policies found. Paste cleaned policy lines (CSV) into the input and press Calculate.";
-  else pre.textContent = policies.map(p => `${p.policyNo}, ${p.name}, ${p.monthsPaid}, ${p.anp.toFixed(2)}, ${p.status}, ${p.persistencyBlock}, ${p.reportDate}`).join("\n");
-  pre.style.display="block"; btn.textContent="Hide Raw Persistency";
-}
-
-/* ========== Generate PDF (jsPDF + AutoTable) ========== */
-async function generateStructuredPDF(){
-  // Ensure lastCalc has latest results
-  if(!lastCalc || !lastCalc.policies || lastCalc.policies.length===0){
-    // attempt parse and calculate quickly
-    parseInputToPolicies();
-    if(policies.length===0){ alert("No policies found. Paste cleaned CSV lines and press Calculate first."); return; }
-    calculate();
-  }
-
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit:'mm', format:'a4', compress:true });
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const marginLeft = 18;
-  let cursorY = 18;
-
-  // Header
-  doc.setFont("helvetica","bold");
-  doc.setFontSize(16);
-  doc.text("Persistency Calculator Report", pageWidth/2, cursorY, { align:'center' });
-  cursorY += 8;
-
-  doc.setFont("helvetica","normal");
-  doc.setFontSize(10);
-  doc.text(`Report Date: ${document.getElementById("reportDate").innerText.replace("Report Date: ","")}`, marginLeft, cursorY);
-  doc.text(`Persistency Block: ${document.getElementById("persistBlock").innerText.replace("Persistency Block: ","")}`, marginLeft, cursorY + 6);
-  // Agent on top-right
-  doc.text(`Agent: ${document.getElementById("agentName").innerText.replace("Agent: ","")}`, pageWidth - marginLeft, cursorY, { align:'right' });
-
-  cursorY += 14;
-
-  // Summary area as small boxed values
-  doc.setDrawColor(230);
-  doc.setFillColor(255,255,255);
-  const leftCol = marginLeft;
-  const colW = (pageWidth - marginLeft*2 - 8) / 5;
-
-  const s = lastCalc;
-  const sumVals = [
-    ["Total ANP", `RM ${s.totalANP.toFixed(2)}`],
-    ["Persisted ANP", `RM ${s.persistedANP.toFixed(2)}`],
-    ["Persistency %", `${s.roundedPersistency}%`],
-    ["Target", `85%`],
-    ["Status", `${s.roundedPersistency >=85 ? "Met" : "Not Met"}`]
-  ];
-
-  doc.setFontSize(9);
-  for(let i=0;i<sumVals.length;i++){
-    const x = leftCol + i*(colW + 2);
-    doc.setFillColor(255,255,255);
-    doc.roundedRect(x, cursorY, colW, 16, 3, 3, 'S');
-    doc.setFont("helvetica","normal");
-    doc.text(sumVals[i][0], x + 2, cursorY + 5);
-    doc.setFont("helvetica","bold");
-    doc.text(sumVals[i][1], x + 2, cursorY + 12);
-  }
-  cursorY += 22;
-
-  // Shortfall block
-  if (s.roundedPersistency < 85) {
-    doc.setFillColor(255, 244, 230);
-    doc.setDrawColor(255, 210, 150);
-    doc.roundedRect(leftCol, cursorY, pageWidth - marginLeft*2, 10, 4, 4, 'FD');
-    doc.setFont("helvetica","normal");
-    doc.setFontSize(10);
-    doc.text(`Shortfall: You need an additional RM ${ (s.shortfall>0? s.shortfall.toFixed(2): "0.00") } to reach 85%.`, leftCol + 4, cursorY + 7);
-    cursorY += 16;
-  } else {
-    doc.setFontSize(10);
-    doc.text("Persistency target is met.", leftCol, cursorY);
-    cursorY += 8;
-  }
-
-  // Suggestion explanation
-  cursorY += 4;
-  doc.setFontSize(10);
-  doc.setFont("helvetica","bold");
-  doc.text("Logic Behind Suggested Policies:", leftCol, cursorY);
-  cursorY += 6;
-  doc.setFont("helvetica","normal");
-  const logicText = "Suggested saveable policies are ranked by priority: Inforce policies with highest Months Paid first; then Lapsed policies, also sorted by Months Paid desc. This prioritizes policies with stronger payment history and higher likelihood of recovery.";
-  const splitLogic = doc.splitTextToSize(logicText, pageWidth - marginLeft*2);
-  doc.text(splitLogic, leftCol, cursorY);
-  cursorY += (splitLogic.length * 5) + 4;
-
-  // Suggested policies table (recovering)
-  if (s.recovering && s.recovering.length>0) {
-    doc.setFont("helvetica","bold");
-    doc.text("Suggested Policies to Recover:", leftCol, cursorY);
-    cursorY += 6;
-
-    // Build table rows
-    const head = [["Policy No","Name","Months Paid","Psist ANP","Status"]];
-    const rows = s.recovering.map(p => [p.policyNo, p.name, String(p.monthsPaid), p.anp.toFixed(2), p.status]);
-
-    doc.autoTable({
-      startY: cursorY,
-      head: head,
-      body: rows,
-      theme: 'grid',
-      headStyles: { fillColor: [242,245,248], textColor: 20, fontStyle:'bold' },
-      styles: { font: 'helvetica', fontSize:9, cellPadding:3 },
-      margin: { left: leftCol, right: marginLeft },
-      tableWidth: pageWidth - marginLeft*2,
-      didDrawPage: function(data) { /* page hook handled below */ }
+  if (persistencyTypeEl) {
+    persistencyTypeEl.addEventListener('change', function () {
+      localStorage.setItem('persistencyType', this.value);
     });
-    cursorY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 6 : cursorY + 10;
   }
-
-  // Full policy listing (may span pages)
-  doc.setFont("helvetica","bold");
-  doc.text("Full Policy Listing:", leftCol, cursorY);
-  cursorY += 6;
-
-  const head2 = [["Policy No","Name","Months Paid","Psist ANP","Status"]];
-  const rows2 = (s.policies || []).map(p => [p.policyNo, p.name, String(p.monthsPaid), p.anp.toFixed(2), p.status]);
-
-  doc.autoTable({
-    startY: cursorY,
-    head: head2,
-    body: rows2,
-    theme: 'grid',
-    headStyles: { fillColor: [242,245,248], textColor: 20, fontStyle:'bold' },
-    styles: { font: 'helvetica', fontSize:9, cellPadding:3 },
-    margin: { left: leftCol, right: marginLeft },
-    tableWidth: pageWidth - marginLeft*2,
-    // repeat header automatically via autoTable
-    didDrawPage: function (data) {
-      // footer: page number centered
-      const page = doc.internal.getNumberOfPages();
-      const totalPagesExp = "{total_pages_count_string}";
-      doc.setFontSize(9);
-      const footerText = `Generated by Persistency Calculator Tool — Page ${page}`;
-      doc.text(footerText, pageWidth/2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
-    }
-  });
-
-  // Replace total pages placeholder (if plugin available)
-  if (typeof doc.putTotalPages === 'function') {
-    doc.putTotalPages("{total_pages_count_string}");
-  }
-
-  // Save PDF
-  doc.save("persistency_report.pdf");
-}
-</script>
+});
+  </script>
 </body>
 </html>
