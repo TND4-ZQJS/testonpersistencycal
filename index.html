@@ -366,35 +366,35 @@ function calculate() {
     </tr>`;
   });
   document.getElementById("pdfPolicyRows").innerHTML = rows;
-
+}
       
-  
-    function downloadPDF() {
-      const content = document.getElementById("pdfReport");
-      const result = document.getElementById("result");
+// This function needs to be outside the 'calculate' function to be accessible by the button's 'onclick' event.
+function downloadPDF() {
+  const content = document.getElementById("pdfReport");
+  const result = document.getElementById("result");
 
-      if (!result.innerText.trim()) {
-        alert("No result to download. Please run a calculation first.");
-        return;
-      }
+  if (!result.innerText.trim()) {
+    alert("No result to download. Please run a calculation first.");
+    return;
+  }
 
-      const title = document.getElementById("pdfTitle");
-      title.style.display = "block";
+  const title = document.getElementById("pdfTitle");
+  title.style.display = "block";
 
-      const opt = {
-        margin: 0.5,
-        filename: 'persistency_report.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-      };
+  const opt = {
+    margin: 0.5,
+    filename: 'persistency_report.pdf',
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+  };
 
-      html2pdf().set(opt).from(content).save().then(() => {
-        title.style.display = "none";
-      });
-    }
+  html2pdf().set(opt).from(content).save().then(() => {
+    title.style.display = "none";
+  });
+}
 
-    // -------------------------
+// -------------------------
 // Auto-save / Restore Inputs
 // -------------------------
 window.addEventListener('DOMContentLoaded', function () {
@@ -425,5 +425,6 @@ window.addEventListener('DOMContentLoaded', function () {
   }
 });
   </script>
+
 </body>
 </html>
