@@ -341,36 +341,39 @@ for (let line of lines) {
     ${unqualifiedList}
   `;
 
-  // Fill PDF
-  document.getElementById("pdfTotalANP").textContent = totalANP.toLocaleString(undefined,{minimumFractionDigits:2});
-  document.getElementById("pdfPersistedANP").textContent = persistedANP.toLocaleString(undefined,{minimumFractionDigits:2});
-  document.getElementById("pdfPersistency").textContent = roundedPersistency+"%";
+
+  // Update Summary Section
+  document.getElementById("pdfTotalANP").textContent = totalANP.toLocaleString(undefined, { minimumFractionDigits: 2 });
+  document.getElementById("pdfPersistedANP").textContent = persistedANP.toLocaleString(undefined, { minimumFractionDigits: 2 });
+  document.getElementById("pdfPersistency").textContent = roundedPersistency + "%";
   document.getElementById("pdfReportDate").textContent = reportDate || "-";
   document.getElementById("pdfPersistencyBlock").textContent = block || "-";
-  document.getElementById("pdfStatus").textContent = (persistencyRaw>=85?"✅ Met":"❌ Not Met");
+  document.getElementById("pdfStatus").textContent = (persistencyRaw >= 85 ? "✅ Met" : "❌ Not Met");
 
-  if(shortfall>0){
-    document.getElementById("pdfShortfallSection").style.display="block";
-    document.getElementById("pdfShortfall").textContent = shortfall.toLocaleString(undefined,{minimumFractionDigits:2});
+  // Update Shortfall Section (show/hide)
+  if (shortfall > 0) {
+    document.getElementById("pdfShortfallSection").style.display = "block";
+    document.getElementById("pdfShortfall").textContent = shortfall.toLocaleString(undefined, { minimumFractionDigits: 2 });
   } else {
-    document.getElementById("pdfShortfallSection").style.display="none";
+    document.getElementById("pdfShortfallSection").style.display = "none";
   }
 
+  // Update Suggestions Section
   document.getElementById("pdfSuggestions").innerHTML = suggestionHTML;
 
-  // Full table
-  let rows="";
-  unqualified.forEach(p=>{
+  // Update Full Policy Table
+  let rows = "";
+  unqualified.forEach(p => {
     rows += `<tr>
       <td style="padding:6px; border:1px solid #ddd;">${p.policyNo}</td>
       <td style="padding:6px; border:1px solid #ddd;">${p.name}</td>
-      <td style="padding:6px; border:1px solid #ddd;">RM ${p.anp.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+      <td style="padding:6px; border:1px solid #ddd;">RM ${p.anp.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
       <td style="padding:6px; border:1px solid #ddd;">${p.monthsPaid}</td>
-      <td style="padding:6px; border:1px solid #ddd;">${statusLabels[p.status] || p.status}</td>
+      <td style="padding:6px; border:1px solid #ddd;">${p.status}</td>
     </tr>`;
   });
   document.getElementById("pdfPolicyRows").innerHTML = rows;
-}
+
       
 // This function needs to be outside the 'calculate' function to be accessible by the button's 'onclick' event.
 function downloadPDF() {
