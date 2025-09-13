@@ -127,6 +127,32 @@
       margin-bottom: 20px;
       text-align: center;
     }
+    #pdfReport {
+  margin: 0;
+  padding: 20px; /* clean spacing */
+}
+
+#pdfReport h1, 
+#pdfReport h2 {
+  page-break-after: avoid;
+}
+
+#pdfReport table {
+  width: 100%;
+  border-collapse: collapse;
+  page-break-inside: auto;
+}
+
+#pdfReport tr {
+  page-break-inside: avoid;
+  page-break-after: auto;
+}
+
+#pdfReport .report-section {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
@@ -372,34 +398,33 @@ Notes:
     }
 
    function downloadPDF() {
-    const content = document.getElementById("pdfReport");
-    const result = document.getElementById("result");
+  const content = document.getElementById("pdfReport");
+  const result = document.getElementById("result");
 
-    if (!result.innerText.trim()) {
-        alert("No result to download. Please run a calculation first.");
-        return;
-    }
+  if (!result.innerText.trim()) {
+    alert("No result to download. Please run a calculation first.");
+    return;
+  }
 
-    const title = document.getElementById("pdfTitle");
-    title.style.display = "block";
+  const title = document.getElementById("pdfTitle");
+  title.style.display = "block";
+  content.style.display = "block";
 
-    // --- Show hidden report before rendering ---
-    content.style.display = "block";
+  const opt = {
+    margin: [5, 10, 10, 10], // smaller top margin in mm
+    filename: 'persistency_report.pdf',
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak: { mode: ['css', 'legacy'] }
+  };
 
-    const opt = {
-        margin: 0.5,
-        filename: 'persistency_report.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-    };
-
-    html2pdf().set(opt).from(content).save().then(() => {
-        // --- Hide report again after export ---
-        content.style.display = "none";
-        title.style.display = "none";
-    });
+  html2pdf().set(opt).from(content).save().then(() => {
+    content.style.display = "none";
+    title.style.display = "none";
+  });
 }
+
 
     // Auto-save / Restore Inputs
     window.addEventListener('DOMContentLoaded', function() {
