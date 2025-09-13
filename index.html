@@ -372,6 +372,7 @@ Notes:
         document.getElementById("pdfPersistency").textContent = roundedPersistency + "%";
         document.getElementById("pdfReportDate").textContent = reportDate || "-";
         document.getElementById("pdfPersistencyBlock").textContent = block || "-";
+        document.getElementById("pdfStatus").setAttribute("data-value", persistencyRaw >= 85 ? "Met" : "Not Met");
         document.getElementById("pdfStatus").textContent = (persistencyRaw >= 85 ? "✅ Met" : "❌ Not Met");
 
         // Update PDF Shortfall Section (show/hide)
@@ -410,7 +411,8 @@ Notes:
   const totalANP = document.getElementById("pdfTotalANP").innerText;
   const persistedANP = document.getElementById("pdfPersistedANP").innerText;
   const persistency = document.getElementById("pdfPersistency").innerText;
-  const status = document.getElementById("pdfStatus").innerText;
+  // Use plain text for PDF (avoid emojis)
+  const status = document.getElementById("pdfStatus").getAttribute("data-value");
   const shortfallBox = document.getElementById("pdfShortfallSection");
   const shortfall = shortfallBox.style.display !== "none"
     ? document.getElementById("pdfShortfall").innerText
