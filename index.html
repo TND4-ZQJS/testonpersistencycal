@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+sis<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" charset="UTF-8" />
@@ -433,7 +433,7 @@ Notes:
   doc.setFontSize(11);
   doc.text(`Total ANP: RM ${totalANP}`, 14, 56);
   doc.text(`Persisted ANP: RM ${persistedANP}`, 14, 62);
-  doc.text(`Persistency %: ${persistency}`, 14, 68);
+  doc.text(`Persistency: ${persistency}`, 14, 68);
   doc.text(`Status: ${status}`, 14, 74);
 
   // --- Shortfall ---
@@ -446,28 +446,37 @@ Notes:
   }
 
   // --- Suggested Saveable Policies ---
-  const suggestionsDiv = document.getElementById("pdfSuggestions");
-  if (suggestionsDiv && suggestionsDiv.innerText.trim()) {
-    doc.setFontSize(14);
-    doc.text("Suggested Saveable Policies", 14, nextY);
-    doc.setFontSize(11);
+const suggestionsDiv = document.getElementById("pdfSuggestions");
+if (suggestionsDiv && suggestionsDiv.innerText.trim()) {
+  // --- Header with background ---
+  doc.setFillColor(240, 240, 240); // light grey background
+  doc.rect(14, nextY - 6, 180, 10, "F"); // x, y, width, height, "F" = fill
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(0, 0, 0);
+  doc.text("Suggested Saveable Policies", 16, nextY); // print inside box
 
-    const suggestionItems = suggestionsDiv.querySelectorAll("li");
-    let y = nextY + 8;
-    suggestionItems.forEach((li, i) => {
-      const text = li.innerText;
-      // auto-wrap long lines
-      const splitText = doc.splitTextToSize(text, 180);
-      doc.text(splitText, 14, y);
-      y += splitText.length * 6; // adjust line height
-      if (y > 270) { // near bottom of page
-        doc.addPage();
-        y = 20;
-      }
-    });
-    nextY = y + 10;
-  }
+  // reset font for content
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(0, 0, 0);
 
+  // --- Suggestions list ---
+  const suggestionItems = suggestionsDiv.querySelectorAll("li");
+  let y = nextY + 10; // move down below header
+  suggestionItems.forEach((li, i) => {
+    const text = li.innerText;
+    // auto-wrap long lines
+    const splitText = doc.splitTextToSize(text, 180);
+    doc.text(splitText, 14, y);
+    y += splitText.length * 6; // adjust line height
+    if (y > 270) { // near bottom of page
+      doc.addPage();
+      y = 20;
+    }
+  });
+  nextY = y + 10;
+}
   // --- Full Policy Table ---
   const rows = [];
   document.querySelectorAll("#pdfPolicyRows tr").forEach(tr => {
