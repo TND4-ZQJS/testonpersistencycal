@@ -267,7 +267,7 @@ Notes:
         });
     }
 
-    function calculate() {
+   function calculate() {
         const raw = document.getElementById("dataInput").value.trim();
         if (!raw) {
             alert("Please paste your cleaned data first.");
@@ -306,18 +306,18 @@ Notes:
 
             if (isNaN(anp) || anp <= 0) continue;
 
-// add to master list (ALL policies)
-allPolicies.push({ policyNo, name, monthsPaid, anp, status });
+            // add to master list (ALL policies)
+            allPolicies.push({ policyNo, name, monthsPaid, anp, status });
 
-totalANP += anp;
+            totalANP += anp;
 
-if (monthsPaid >= threshold) {
-    persistedANP += anp;
-} else {
-    saveable.push({ policyNo, name, monthsPaid, anp, status });
-    unqualified.push({ policyNo, name, monthsPaid, anp, status });
-}
-
+            if (monthsPaid >= threshold) {
+                persistedANP += anp;
+            } else {
+                saveable.push({ policyNo, name, monthsPaid, anp, status });
+                unqualified.push({ policyNo, name, monthsPaid, anp, status });
+            }
+        } // ADDED: Closing curly brace for the for loop
 
         const manulifeRound = (value) => {
             let num = parseFloat(value.toFixed(4));
@@ -392,120 +392,120 @@ if (monthsPaid >= threshold) {
 
         // Update PDF Full Policy Table
         let rows = "";
-allPolicies.forEach(p => {
-    rows += `<tr>
-        <td style="padding:6px; border:1px solid #ddd;">${p.policyNo}</td>
-        <td style="padding:6px; border:1px solid #ddd;">${p.name}</td>
-        <td style="padding:6px; border:1px solid #ddd;">RM ${p.anp.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-        <td style="padding:6px; border:1px solid #ddd;">${p.monthsPaid}</td>
-        <td style="padding:6px; border:1px solid #ddd;">${statusLabels[p.status] || p.status}</td>
-    </tr>`;
-});
-document.getElementById("pdfPolicyRows").innerHTML = rows;
+        allPolicies.forEach(p => {
+            rows += `<tr>
+                <td style="padding:6px; border:1px solid #ddd;">${p.policyNo}</td>
+                <td style="padding:6px; border:1px solid #ddd;">${p.name}</td>
+                <td style="padding:6px; border:1px solid #ddd;">RM ${p.anp.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                <td style="padding:6px; border:1px solid #ddd;">${p.monthsPaid}</td>
+                <td style="padding:6px; border:1px solid #ddd;">${statusLabels[p.status] || p.status}</td>
+            </tr>`;
+        });
+        document.getElementById("pdfPolicyRows").innerHTML = rows;
     }
 
- async function downloadPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF("p", "mm", "a4");
+    async function downloadPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF("p", "mm", "a4");
 
-  // --- Grab summary data ---
-  const reportDate = document.getElementById("pdfReportDate").innerText;
-  const block = document.getElementById("pdfPersistencyBlock").innerText;
-  const totalANP = document.getElementById("pdfTotalANP").innerText;
-  const persistedANP = document.getElementById("pdfPersistedANP").innerText;
-  const persistency = document.getElementById("pdfPersistency").innerText;
-  // Use plain text for PDF (avoid emojis)
-  const status = document.getElementById("pdfStatus").getAttribute("data-value");
-  const shortfallBox = document.getElementById("pdfShortfallSection");
-  const shortfall = shortfallBox.style.display !== "none"
-    ? document.getElementById("pdfShortfall").innerText
-    : null;
+        // --- Grab summary data ---
+        const reportDate = document.getElementById("pdfReportDate").innerText;
+        const block = document.getElementById("pdfPersistencyBlock").innerText;
+        const totalANP = document.getElementById("pdfTotalANP").innerText;
+        const persistedANP = document.getElementById("pdfPersistedANP").innerText;
+        const persistency = document.getElementById("pdfPersistency").innerText;
+        // Use plain text for PDF (avoid emojis)
+        const status = document.getElementById("pdfStatus").getAttribute("data-value");
+        const shortfallBox = document.getElementById("pdfShortfallSection");
+        const shortfall = shortfallBox.style.display !== "none"
+            ? document.getElementById("pdfShortfall").innerText
+            : null;
 
-  // --- Title ---
-  doc.setFontSize(18);
-  doc.text("Persistency Calculator Report", 105, 20, { align: "center" });
+        // --- Title ---
+        doc.setFontSize(18);
+        doc.text("Persistency Calculator Report", 105, 20, { align: "center" });
 
-  // --- Metadata ---
-  doc.setFontSize(11);
-  doc.text(`Report Date: ${reportDate}`, 14, 30);
-  doc.text(`Persistency Block: ${block}`, 14, 36);
+        // --- Metadata ---
+        doc.setFontSize(11);
+        doc.text(`Report Date: ${reportDate}`, 14, 30);
+        doc.text(`Persistency Block: ${block}`, 14, 36);
 
-  // --- Executive Summary ---
-  doc.setFontSize(14);
-  doc.text("Executive Summary", 14, 48);
-  doc.setFontSize(11);
-  doc.text(`Total ANP: RM ${totalANP}`, 14, 56);
-  doc.text(`Persisted ANP: RM ${persistedANP}`, 14, 62);
-  doc.text(`Persistency: ${persistency}`, 14, 68);
-  doc.text(`Status: ${status}`, 14, 74);
+        // --- Executive Summary ---
+        doc.setFontSize(14);
+        doc.text("Executive Summary", 14, 48);
+        doc.setFontSize(11);
+        doc.text(`Total ANP: RM ${totalANP}`, 14, 56);
+        doc.text(`Persisted ANP: RM ${persistedANP}`, 14, 62);
+        doc.text(`Persistency: ${persistency}`, 14, 68);
+        doc.text(`Status: ${status}`, 14, 74);
 
-  // --- Shortfall ---
-  let nextY = 80;
-  if (shortfall) {
-    doc.setTextColor(200, 0, 0);
-    doc.text(`Shortfall: RM ${shortfall}`, 14, 80);
-    doc.setTextColor(0, 0, 0);
-    nextY = 90;
-  }
+        // --- Shortfall ---
+        let nextY = 80;
+        if (shortfall) {
+            doc.setTextColor(200, 0, 0);
+            doc.text(`Shortfall: RM ${shortfall}`, 14, 80);
+            doc.setTextColor(0, 0, 0);
+            nextY = 90;
+        }
 
-  // --- Suggested Saveable Policies ---
-const suggestionsDiv = document.getElementById("pdfSuggestions");
-if (suggestionsDiv && suggestionsDiv.innerText.trim()) {
-  // --- Header with background ---
-  doc.setFillColor(240, 240, 240); // light grey background
-  doc.rect(14, nextY - 6, 180, 10, "F"); // x, y, width, height, "F" = fill
-  doc.setFontSize(14);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(0, 0, 0);
-  doc.text("Suggested Saveable Policies", 16, nextY); // print inside box
+        // --- Suggested Saveable Policies ---
+        const suggestionsDiv = document.getElementById("pdfSuggestions");
+        if (suggestionsDiv && suggestionsDiv.innerText.trim()) {
+            // --- Header with background ---
+            doc.setFillColor(240, 240, 240); // light grey background
+            doc.rect(14, nextY - 6, 180, 10, "F"); // x, y, width, height, "F" = fill
+            doc.setFontSize(14);
+            doc.setFont("helvetica", "bold");
+            doc.setTextColor(0, 0, 0);
+            doc.text("Suggested Saveable Policies", 16, nextY); // print inside box
 
-  // reset font for content
-  doc.setFontSize(11);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(0, 0, 0);
+            // reset font for content
+            doc.setFontSize(11);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(0, 0, 0);
 
-  // --- Suggestions list ---
-  const suggestionItems = suggestionsDiv.querySelectorAll("li");
-  let y = nextY + 10; // move down below header
-  suggestionItems.forEach((li, i) => {
-    const text = li.innerText;
-    // auto-wrap long lines
-    const splitText = doc.splitTextToSize(text, 180);
-    doc.text(splitText, 14, y);
-    y += splitText.length * 6; // adjust line height
-    if (y > 270) { // near bottom of page
-      doc.addPage();
-      y = 20;
+            // --- Suggestions list ---
+            const suggestionItems = suggestionsDiv.querySelectorAll("li");
+            let y = nextY + 10; // move down below header
+            suggestionItems.forEach((li, i) => {
+                const text = li.innerText;
+                // auto-wrap long lines
+                const splitText = doc.splitTextToSize(text, 180);
+                doc.text(splitText, 14, y);
+                y += splitText.length * 6; // adjust line height
+                if (y > 270) { // near bottom of page
+                    doc.addPage();
+                    y = 20;
+                }
+            });
+            nextY = y + 10;
+        }
+
+        // --- Full Policy Table ---
+        const rows = [];
+        document.querySelectorAll("#pdfPolicyRows tr").forEach(tr => {
+            const cells = tr.querySelectorAll("td");
+            rows.push([
+                cells[0].innerText,
+                cells[1].innerText,
+                cells[2].innerText,
+                cells[3].innerText,
+                cells[4].innerText
+            ]);
+        });
+
+        doc.autoTable({
+            startY: nextY,
+            head: [["Policy No", "Name", "ANP", "Months Paid", "Status"]],
+            body: rows,
+            styles: { fontSize: 9, cellPadding: 2 },
+            headStyles: { fillColor: [0, 113, 227] },
+            theme: "grid"
+        });
+
+        // --- Save file ---
+        doc.save("persistency_report.pdf");
     }
-  });
-  nextY = y + 10;
-}
-  // --- Full Policy Table ---
-  const rows = [];
-  document.querySelectorAll("#pdfPolicyRows tr").forEach(tr => {
-    const cells = tr.querySelectorAll("td");
-    rows.push([
-      cells[0].innerText,
-      cells[1].innerText,
-      cells[2].innerText,
-      cells[3].innerText,
-      cells[4].innerText
-    ]);
-  });
-
-  doc.autoTable({
-    startY: nextY,
-    head: [["Policy No", "Name", "ANP", "Months Paid", "Status"]],
-    body: rows,
-    styles: { fontSize: 9, cellPadding: 2 },
-    headStyles: { fillColor: [0, 113, 227] },
-    theme: "grid"
-  });
-
-  // --- Save file ---
-  doc.save("persistency_report.pdf");
-}
-
 
     // Auto-save / Restore Inputs
     window.addEventListener('DOMContentLoaded', function() {
