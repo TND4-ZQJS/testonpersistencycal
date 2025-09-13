@@ -482,6 +482,10 @@ Notes:
         }
 
         // --- Full Policy Table ---
+        doc.setFontSize(14);
+        doc.text("Policy Listing", 14, nextY + 6);
+
+      
         const rows = [];
         document.querySelectorAll("#pdfPolicyRows tr").forEach(tr => {
             const cells = tr.querySelectorAll("td");
