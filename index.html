@@ -482,34 +482,33 @@ Notes:
         }
 
         // --- Full Policy Table ---
-        doc.setFontSize(14);
-        doc.text("Policy Listing", 14, nextY + 6);
+const titleY = nextY + 6;
+doc.setFontSize(14);
+doc.text("Policy Listing", 14, titleY);
 
-      
-        const rows = [];
-        document.querySelectorAll("#pdfPolicyRows tr").forEach(tr => {
-            const cells = tr.querySelectorAll("td");
-            rows.push([
-                cells[0].innerText,
-                cells[1].innerText,
-                cells[2].innerText,
-                cells[3].innerText,
-                cells[4].innerText
-            ]);
-        });
+const rows = [];
+document.querySelectorAll("#pdfPolicyRows tr").forEach(tr => {
+    const cells = tr.querySelectorAll("td");
+    rows.push([
+        cells[0].innerText,
+        cells[1].innerText,
+        cells[2].innerText,
+        cells[3].innerText,
+        cells[4].innerText
+    ]);
+});
 
-        doc.autoTable({
-        startY: nextY,
-        head: [["Policy No", "Name", "ANP", "Months Paid", "Status"]],
-        body: rows,
-        styles: { fontSize: 9, cellPadding: 2 },
-        // MODIFIED: Light grey header background and black text
-        headStyles: {
-            fillColor: [220, 220, 220], // Light grey
-            textColor: [0, 0, 0]        // Black
-        },
-        theme: "grid"
-        });
+doc.autoTable({
+    startY: titleY + 4, // Start the table below the title
+    head: [["Policy No", "Name", "ANP", "Months Paid", "Status"]],
+    body: rows,
+    styles: { fontSize: 9, cellPadding: 2 },
+    headStyles: {
+        fillColor: [220, 220, 220],
+        textColor: [0, 0, 0]
+    },
+    theme: "grid"
+});
 
         // --- Save file ---
         doc.save("persistency_report.pdf");
