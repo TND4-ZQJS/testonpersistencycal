@@ -400,11 +400,11 @@ Notes:
 
     }
 
-  async function downloadPDF() {
+ async function downloadPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF("p", "mm", "a4");
 
-  // Grab data from your hidden pdfReport (already updated by calculate())
+  // --- Grab summary data ---
   const reportDate = document.getElementById("pdfReportDate").innerText;
   const block = document.getElementById("pdfPersistencyBlock").innerText;
   const totalANP = document.getElementById("pdfTotalANP").innerText;
@@ -412,19 +412,20 @@ Notes:
   const persistency = document.getElementById("pdfPersistency").innerText;
   const status = document.getElementById("pdfStatus").innerText;
   const shortfallBox = document.getElementById("pdfShortfallSection");
-  const shortfall = shortfallBox.style.display !== "none" ? 
-    document.getElementById("pdfShortfall").innerText : null;
+  const shortfall = shortfallBox.style.display !== "none"
+    ? document.getElementById("pdfShortfall").innerText
+    : null;
 
-  // Title
+  // --- Title ---
   doc.setFontSize(18);
   doc.text("Persistency Calculator Report", 105, 20, { align: "center" });
 
-  // Metadata
+  // --- Metadata ---
   doc.setFontSize(11);
   doc.text(`Report Date: ${reportDate}`, 14, 30);
   doc.text(`Persistency Block: ${block}`, 14, 36);
 
-  // Executive Summary
+  // --- Executive Summary ---
   doc.setFontSize(14);
   doc.text("Executive Summary", 14, 48);
   doc.setFontSize(11);
@@ -433,14 +434,39 @@ Notes:
   doc.text(`Persistency %: ${persistency}`, 14, 68);
   doc.text(`Status: ${status}`, 14, 74);
 
-  // Shortfall Section
+  // --- Shortfall ---
+  let nextY = 80;
   if (shortfall) {
     doc.setTextColor(200, 0, 0);
-    doc.text(`Shortfall: RM ${shortfall}`, 14, 84);
+    doc.text(`Shortfall: RM ${shortfall}`, 14, 80);
     doc.setTextColor(0, 0, 0);
+    nextY = 90;
   }
 
-  // Table (Full Policy Listing)
+  // --- Suggested Saveable Policies ---
+  const suggestionsDiv = document.getElementById("pdfSuggestions");
+  if (suggestionsDiv && suggestionsDiv.innerText.trim()) {
+    doc.setFontSize(14);
+    doc.text("Suggested Saveable Policies", 14, nextY);
+    doc.setFontSize(11);
+
+    const suggestionItems = suggestionsDiv.querySelectorAll("li");
+    let y = nextY + 8;
+    suggestionItems.forEach((li, i) => {
+      const text = li.innerText;
+      // auto-wrap long lines
+      const splitText = doc.splitTextToSize(text, 180);
+      doc.text(splitText, 14, y);
+      y += splitText.length * 6; // adjust line height
+      if (y > 270) { // near bottom of page
+        doc.addPage();
+        y = 20;
+      }
+    });
+    nextY = y + 10;
+  }
+
+  // --- Full Policy Table ---
   const rows = [];
   document.querySelectorAll("#pdfPolicyRows tr").forEach(tr => {
     const cells = tr.querySelectorAll("td");
@@ -454,7 +480,7 @@ Notes:
   });
 
   doc.autoTable({
-    startY: shortfall ? 94 : 84,
+    startY: nextY,
     head: [["Policy No", "Name", "ANP", "Months Paid", "Status"]],
     body: rows,
     styles: { fontSize: 9, cellPadding: 2 },
@@ -462,9 +488,10 @@ Notes:
     theme: "grid"
   });
 
-  // Save file
+  // --- Save file ---
   doc.save("persistency_report.pdf");
 }
+
 
     // Auto-save / Restore Inputs
     window.addEventListener('DOMContentLoaded', function() {
