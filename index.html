@@ -155,6 +155,9 @@
 
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
 </head>
 <body>
   <div class="container" id="pdfContent">
@@ -397,34 +400,71 @@ Notes:
 
     }
 
-   function downloadPDF() {
-  const content = document.getElementById("pdfReport");
-  const result = document.getElementById("result");
+  async function downloadPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF("p", "mm", "a4");
 
-  if (!result.innerText.trim()) {
-    alert("No result to download. Please run a calculation first.");
-    return;
+  // Grab data from your hidden pdfReport (already updated by calculate())
+  const reportDate = document.getElementById("pdfReportDate").innerText;
+  const block = document.getElementById("pdfPersistencyBlock").innerText;
+  const totalANP = document.getElementById("pdfTotalANP").innerText;
+  const persistedANP = document.getElementById("pdfPersistedANP").innerText;
+  const persistency = document.getElementById("pdfPersistency").innerText;
+  const status = document.getElementById("pdfStatus").innerText;
+  const shortfallBox = document.getElementById("pdfShortfallSection");
+  const shortfall = shortfallBox.style.display !== "none" ? 
+    document.getElementById("pdfShortfall").innerText : null;
+
+  // Title
+  doc.setFontSize(18);
+  doc.text("Persistency Calculator Report", 105, 20, { align: "center" });
+
+  // Metadata
+  doc.setFontSize(11);
+  doc.text(`Report Date: ${reportDate}`, 14, 30);
+  doc.text(`Persistency Block: ${block}`, 14, 36);
+
+  // Executive Summary
+  doc.setFontSize(14);
+  doc.text("Executive Summary", 14, 48);
+  doc.setFontSize(11);
+  doc.text(`Total ANP: RM ${totalANP}`, 14, 56);
+  doc.text(`Persisted ANP: RM ${persistedANP}`, 14, 62);
+  doc.text(`Persistency %: ${persistency}`, 14, 68);
+  doc.text(`Status: ${status}`, 14, 74);
+
+  // Shortfall Section
+  if (shortfall) {
+    doc.setTextColor(200, 0, 0);
+    doc.text(`Shortfall: RM ${shortfall}`, 14, 84);
+    doc.setTextColor(0, 0, 0);
   }
 
-  const title = document.getElementById("pdfTitle");
-  title.style.display = "block";
-  content.style.display = "block";
-
-  const opt = {
-    margin: [5, 10, 10, 10], // smaller top margin in mm
-    filename: 'persistency_report.pdf',
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2 },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    pagebreak: { mode: ['css', 'legacy'] }
-  };
-
-  html2pdf().set(opt).from(content).save().then(() => {
-    content.style.display = "none";
-    title.style.display = "none";
+  // Table (Full Policy Listing)
+  const rows = [];
+  document.querySelectorAll("#pdfPolicyRows tr").forEach(tr => {
+    const cells = tr.querySelectorAll("td");
+    rows.push([
+      cells[0].innerText,
+      cells[1].innerText,
+      cells[2].innerText,
+      cells[3].innerText,
+      cells[4].innerText
+    ]);
   });
-}
 
+  doc.autoTable({
+    startY: shortfall ? 94 : 84,
+    head: [["Policy No", "Name", "ANP", "Months Paid", "Status"]],
+    body: rows,
+    styles: { fontSize: 9, cellPadding: 2 },
+    headStyles: { fillColor: [0, 113, 227] },
+    theme: "grid"
+  });
+
+  // Save file
+  doc.save("persistency_report.pdf");
+}
 
     // Auto-save / Restore Inputs
     window.addEventListener('DOMContentLoaded', function() {
