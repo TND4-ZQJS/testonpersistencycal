@@ -262,7 +262,7 @@ function calculate() {
     "TC": "TC (surrendered)"
   };
 
-  for (let line of lines) {
+for (let line of lines) {
     const parts = line.split(",").map(s => s.trim());
     if (parts.length < 7) continue;
 
@@ -277,14 +277,18 @@ function calculate() {
     if (isNaN(anp) || anp <= 0) continue;
 
     totalANP += anp;
+    
+    // --- THIS IS THE CORRECTED LOGIC ---
     if (monthsPaid >= threshold) {
       persistedANP += anp;
     } else {
+      // These are the policies that are "unqualified"
       saveable.push({ policyNo, name, monthsPaid, anp, status });
+      unqualified.push({ policyNo, name, monthsPaid, anp, status }); 
     }
+    // --- END CORRECTED LOGIC ---
+}
 
-    unqualified.push({ policyNo, name, monthsPaid, anp, status });
-  }
 
   const manulifeRound = (value) => {
     let num = parseFloat(value.toFixed(4));
