@@ -174,51 +174,52 @@ Notes:
     <div id="result"></div>
 
     <!-- Hidden PDF Report Template -->
-<div id="pdfReport" style="display:none; text-align:left; padding:40px; font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif; color:#111;">
+<div id="pdfReport" style="display:none; text-align:left; padding:50px; font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif; color:#111;">
+
   <!-- Header -->
-  <div style="border-bottom:1px solid #ddd; padding-bottom:10px; margin-bottom:20px;">
-    <div style="float:left;">
-      <p><b>Report Date:</b> <span id="pdfReportDate"></span></p>
-      <p><b>Persistency Block:</b> <span id="pdfPersistencyBlock"></span></p>
-    </div>
-    <div style="text-align:center; font-size:22px; font-weight:bold;">Persistency Calculator Report</div>
-    <div style="clear:both;"></div>
+  <div style="text-align:center; margin-bottom:40px;">
+    <h1 style="margin:0; font-size:26px; font-weight:600; color:#111;">Persistency Calculator Report</h1>
+    <p style="margin:5px 0; font-size:14px; color:#666;">
+      Report Date: <span id="pdfReportDate"></span> • Persistency Block: <span id="pdfPersistencyBlock"></span>
+    </p>
   </div>
 
   <!-- Executive Summary -->
-  <h3>Executive Summary</h3>
-  <p><b>Total ANP:</b> RM <span id="pdfTotalANP"></span></p>
-  <p><b>Persisted ANP:</b> RM <span id="pdfPersistedANP"></span></p>
-  <p><b>Persistency %:</b> <span id="pdfPersistency"></span></p>
-  <p><b>Target Persistency:</b> 85%</p>
-  <p><b>Status:</b> <span id="pdfStatus"></span></p>
+  <div style="margin-bottom:40px;">
+    <h2 style="font-size:18px; font-weight:600; border-bottom:1px solid #e0e0e0; padding-bottom:6px; margin-bottom:15px;">Executive Summary</h2>
+    <p><b>Total ANP:</b> RM <span id="pdfTotalANP"></span></p>
+    <p><b>Persisted ANP:</b> RM <span id="pdfPersistedANP"></span></p>
+    <p><b>Persistency %:</b> <span id="pdfPersistency"></span></p>
+    <p><b>Status:</b> <span id="pdfStatus"></span></p>
+  </div>
 
   <!-- Shortfall Section -->
-  <div id="pdfShortfallSection" style="margin-top:20px; display:none;">
-    <h3>Shortfall</h3>
+  <div id="pdfShortfallSection" style="margin-bottom:40px; display:none; padding:15px; border-radius:12px; background:#fff5f5; border:1px solid #ffd6d6;">
+    <h2 style="font-size:18px; font-weight:600; margin-top:0; color:#c00;">Shortfall</h2>
     <p><b>Required Additional ANP:</b> RM <span id="pdfShortfall"></span></p>
   </div>
 
-  <!-- Saveable Policies -->
-  <div id="pdfSuggestions" style="margin-top:30px;"></div>
+  <!-- Suggested Saveable Policies -->
+  <div id="pdfSuggestions" style="margin-bottom:40px;"></div>
 
   <!-- Full Policy Listing -->
-  <div id="pdfPolicyTable" style="margin-top:30px;">
-    <h3>Full Policy Listing</h3>
-    <table style="width:100%; border-collapse:collapse; font-size:12px;">
+  <div id="pdfPolicyTable">
+    <h2 style="font-size:18px; font-weight:600; border-bottom:1px solid #e0e0e0; padding-bottom:6px; margin-bottom:15px;">Full Policy Listing</h2>
+    <table style="width:100%; border-collapse:collapse; font-size:13px;">
       <thead>
-        <tr style="background:#f5f5f7; text-align:left;">
-          <th style="padding:6px; border:1px solid #ddd;">Policy No</th>
-          <th style="padding:6px; border:1px solid #ddd;">Name</th>
-          <th style="padding:6px; border:1px solid #ddd;">ANP</th>
-          <th style="padding:6px; border:1px solid #ddd;">Months Paid</th>
-          <th style="padding:6px; border:1px solid #ddd;">Status</th>
+        <tr style="background:#f9f9f9; text-align:left;">
+          <th style="padding:10px; border-bottom:1px solid #e0e0e0;">Policy No</th>
+          <th style="padding:10px; border-bottom:1px solid #e0e0e0;">Name</th>
+          <th style="padding:10px; border-bottom:1px solid #e0e0e0;">ANP</th>
+          <th style="padding:10px; border-bottom:1px solid #e0e0e0;">Months Paid</th>
+          <th style="padding:10px; border-bottom:1px solid #e0e0e0;">Status</th>
         </tr>
       </thead>
       <tbody id="pdfPolicyRows"></tbody>
     </table>
   </div>
 </div>
+
     
     <button onclick="downloadPDF()">📄 Download Report as PDF</button>
   </div>
