@@ -281,6 +281,7 @@ Notes:
         let persistedANP = 0;
         let saveable = [];
         let unqualified = [];
+        let allPolicies = [];
         let reportDate = "";
         let block = "";
 
@@ -305,15 +306,18 @@ Notes:
 
             if (isNaN(anp) || anp <= 0) continue;
 
-            totalANP += anp;
+// add to master list (ALL policies)
+allPolicies.push({ policyNo, name, monthsPaid, anp, status });
 
-            if (monthsPaid >= threshold) {
-                persistedANP += anp;
-            } else {
-                saveable.push({ policyNo, name, monthsPaid, anp, status });
-                unqualified.push({ policyNo, name, monthsPaid, anp, status });
-            }
-        }
+totalANP += anp;
+
+if (monthsPaid >= threshold) {
+    persistedANP += anp;
+} else {
+    saveable.push({ policyNo, name, monthsPaid, anp, status });
+    unqualified.push({ policyNo, name, monthsPaid, anp, status });
+}
+
 
         const manulifeRound = (value) => {
             let num = parseFloat(value.toFixed(4));
@@ -388,17 +392,16 @@ Notes:
 
         // Update PDF Full Policy Table
         let rows = "";
-        unqualified.forEach(p => {
-            rows += `<tr>
-                <td style="padding:6px; border:1px solid #ddd;">${p.policyNo}</td>
-                <td style="padding:6px; border:1px solid #ddd;">${p.name}</td>
-                <td style="padding:6px; border:1px solid #ddd;">RM ${p.anp.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                <td style="padding:6px; border:1px solid #ddd;">${p.monthsPaid}</td>
-                <td style="padding:6px; border:1px solid #ddd;">${statusLabels[p.status] || p.status}</td>
-            </tr>`;
-        });
-        document.getElementById("pdfPolicyRows").innerHTML = rows;
-
+allPolicies.forEach(p => {
+    rows += `<tr>
+        <td style="padding:6px; border:1px solid #ddd;">${p.policyNo}</td>
+        <td style="padding:6px; border:1px solid #ddd;">${p.name}</td>
+        <td style="padding:6px; border:1px solid #ddd;">RM ${p.anp.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+        <td style="padding:6px; border:1px solid #ddd;">${p.monthsPaid}</td>
+        <td style="padding:6px; border:1px solid #ddd;">${statusLabels[p.status] || p.status}</td>
+    </tr>`;
+});
+document.getElementById("pdfPolicyRows").innerHTML = rows;
     }
 
  async function downloadPDF() {
