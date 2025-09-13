@@ -495,12 +495,16 @@ Notes:
         });
 
         doc.autoTable({
-            startY: nextY,
-            head: [["Policy No", "Name", "ANP", "Months Paid", "Status"]],
-            body: rows,
-            styles: { fontSize: 9, cellPadding: 2 },
-            headStyles: { fillColor: [0, 113, 227] },
-            theme: "grid"
+        startY: nextY,
+        head: [["Policy No", "Name", "ANP", "Months Paid", "Status"]],
+        body: rows,
+        styles: { fontSize: 9, cellPadding: 2 },
+        // MODIFIED: Light grey header background and black text
+        headStyles: {
+            fillColor: [220, 220, 220], // Light grey
+            textColor: [0, 0, 0]        // Black
+        },
+        theme: "grid"
         });
 
         // --- Save file ---
